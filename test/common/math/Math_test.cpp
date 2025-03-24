@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
 #include <catch2/catch_test_macros.hpp>
+#include <cmath>
 #include "clarisma/math/Math.h"
 
 using namespace clarisma;
