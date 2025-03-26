@@ -23,6 +23,10 @@ void BlobStore::verifyHeader() const
 	{
 		error("Not a BlobStore file");
 	}
+    if (root->version != 1'000'000)     // old version notation
+    {
+        error("Wrong BlobStore version (Requires 1.0)");
+    }
 }
 
 
@@ -43,6 +47,7 @@ uint32_t BlobStore::pagesForPayloadSize(uint32_t payloadSize) const
     return (payloadSize + (1 << pageSizeShift_) + BLOB_HEADER_SIZE - 1) >> pageSizeShift_;
 }
 
+#ifdef CLARISMA_BLOBSTORE_V1_EDITS
 
 /**
  * Allocates a blob of a given size. If possible, the smallest existing 
@@ -646,5 +651,7 @@ void BlobStore::Transaction::commit()
         // Do not deallocate the first 4KB block, as it contains
     }
 }
+
+#endif
 
 } // namespace clarisma
