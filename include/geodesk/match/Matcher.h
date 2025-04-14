@@ -100,8 +100,18 @@ public:
         const MatcherHolder* a, const MatcherHolder* b);
 
     void dealloc() const;
-    void addref() const { ++refcount_; }
-    void release() const { if (--refcount_ == 0) dealloc(); }
+    void addref() const
+    {
+        refcount_.fetch_add(1, std::memory_order_relaxed);
+    }
+
+    void release() const
+    {
+        if (refcount_.fetch_sub(1, std::memory_order_acq_rel) == 1)
+        {
+            dealloc();
+        }
+    }
 
     const Matcher& mainMatcher() const { return mainMatcher_; }
     FeatureTypes acceptedTypes() const { return acceptedTypes_; }

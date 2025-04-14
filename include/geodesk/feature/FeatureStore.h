@@ -46,10 +46,25 @@ public:
     {
         BlobStore::open(fileName, 0);   // TODO: open mode
     }
-    
+
+    /*
     void addref()  { ++refcount_;  }
     void release() { if (--refcount_ == 0) delete this;  }
     size_t refcount() const { return refcount_; }
+    */
+
+    void addref()
+    {
+        refcount_.fetch_add(1, std::memory_order_relaxed);
+    }
+
+    void release()
+    {
+        if (refcount_.fetch_sub(1, std::memory_order_acq_rel) == 1)
+        {
+            delete this;
+        }
+    }
 
     DataPtr tileIndex() const
     { 
