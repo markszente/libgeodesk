@@ -100,6 +100,7 @@ public:
         const MatcherHolder* a, const MatcherHolder* b);
 
     void dealloc() const;
+#ifdef GEODESK_MULTITHREADED
     void addref() const
     {
         refcount_.fetch_add(1, std::memory_order_relaxed);
@@ -112,6 +113,10 @@ public:
             dealloc();
         }
     }
+#else
+    void addref() const { ++refcount_; }
+    void release() const { if (--refcount_ == 0) dealloc(); }
+#endif
 
     const Matcher& mainMatcher() const { return mainMatcher_; }
     FeatureTypes acceptedTypes() const { return acceptedTypes_; }
@@ -128,7 +133,12 @@ private:
     static bool matchAllMethod(const Matcher*, FeaturePtr);
     static uint8_t* alloc(size_t size) { return new uint8_t[size]; };
 
+#ifdef GEODESK_MULTITHREADED
     mutable std::atomic_uint32_t refcount_;
+#else
+    mutable uint32_t refcount_;
+#endif
+
     FeatureTypes acceptedTypes_;
     uint32_t resourcesLength_;
     uint32_t referencedMatcherHoldersCount_;
