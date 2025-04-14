@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <atomic>
 
 namespace clarisma {
 
@@ -23,7 +23,7 @@ public:
 	}
 
 private:
-	mutable uint32_t refcount_;
+	mutable std::atomic_uint32_t refcount_;
 };
 
 } // namespace clarisma

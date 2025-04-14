@@ -118,7 +118,7 @@ private:
     static bool matchAllMethod(const Matcher*, FeaturePtr);
     static uint8_t* alloc(size_t size) { return new uint8_t[size]; };
 
-    mutable uint32_t refcount_;
+    mutable std::atomic_uint32_t refcount_;
     FeatureTypes acceptedTypes_;
     uint32_t resourcesLength_;
     uint32_t referencedMatcherHoldersCount_;

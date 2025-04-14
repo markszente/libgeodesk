@@ -112,7 +112,7 @@ private:
     static std::unordered_map<std::string, FeatureStore*>& getOpenStores();
     static std::mutex& getOpenStoresMutex();
     
-    size_t refcount_;
+    std::atomic_size_t refcount_;
     StringTable strings_;
     IndexedKeyMap keysToCategories_;
     MatcherCompiler matchers_;
