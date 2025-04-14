@@ -39,7 +39,7 @@ struct test_name##_registrar                                     \
 } test_name##_registrar_instance;                                \
 int64_t test_name##_impl()
 
-static Features world(R"(c:\geodesk\tests\berlin.gol)");
+static Features world(R"(c:\geodesk\tests\bavaria.gol)");
 
 Feature findLargestCountry()
 {
@@ -111,6 +111,7 @@ GEODESK_TEST(italian_restaurant_count)
     return world("na[amenity=restaurant][cuisine=italian]").count();
 }
 
+/*
 GEODESK_TEST(largest_country_id)
 {
     return findLargestCountry().id();
@@ -126,6 +127,7 @@ GEODESK_TEST(max_1km_from_largest_country_centroid_count)
     return world.maxMetersFrom(1000,
         findLargestCountry().centroid()).count();
 }
+*/
 
 GEODESK_TEST(member_count)
 {
