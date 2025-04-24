@@ -114,7 +114,7 @@ public:
         return FeatureUtils::count(view_);
     }
 
-    /// Returns true if this collection contains no feature.
+    /// Returns `true` if this collection contains no features.
     ///
     bool isEmpty() const
     {
