@@ -29,6 +29,12 @@ TEST_CASE("Decimal")
 	d = Decimal("01", false);
 	REQUIRE(d == 1);
 
+	d = Decimal("08135", false);
+	REQUIRE(d == 8135);
+
+	d = Decimal("08135", true);
+	REQUIRE(!d.isValid());
+
 	d = Decimal("0.0", true);
 	REQUIRE(d == 0);
 
