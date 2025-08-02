@@ -121,5 +121,31 @@ TEST_CASE_METHOD(GolFixture, "Lookup with Key")
 	REQUIRE(v != "");
 }
 
+TEST_CASE_METHOD(GolFixture, "Iterate tags of anonymous nodes")
+{
+	int untaggedNodeCount = 0;
+	int highwayNodeCount = 0;
+	for (Way street : monaco("w[highway]"))
+	{
+		for (Node node : street.nodes())
+		{
+			if (node.tags().isEmpty()) untaggedNodeCount++;
+			for (Tag tag : node.tags())
+			{
+				if (tag.key() == "highway") highwayNodeCount++;
+			}
+		}
+	}
+	std::cout << untaggedNodeCount << " untagged nodes, "
+		<< highwayNodeCount << " highway nodes.";
+}
+
+TEST_CASE("Issue 21")
+{
+	Features world("c:\\geodesk\\tests\\w.gol");
+	Box tileBounds = Box::ofWSEN(-10, -10, 10, 10);
+	Features tile = world(tileBounds);
+	Features features = tile("w");
+}
 
 // TODO: Test if parent relation iterator respect types

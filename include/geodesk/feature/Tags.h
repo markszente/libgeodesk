@@ -48,6 +48,7 @@ namespace geodesk {
 class GEODESK_API Tags
 {
 public:
+    explicit Tags(FeatureStore* store) : store_(store), tags_(TagTablePtr::empty()) {}
     explicit Tags(const Feature& feature);
     Tags(FeatureStore* store, FeaturePtr ptr) :
         store_(store), tags_(ptr.tags()) {}

@@ -114,6 +114,13 @@ public:
         return FeatureUtils::count(view_);
     }
 
+    /// @brief Returns `true` if this collection contains no features.
+    ///
+    bool isEmpty() const
+    {
+        return FeatureUtils::isEmpty(view_);
+    }
+
     /// @brief Calculates the total length (in meters) of the features
     /// in this collection.
     ///
@@ -225,6 +232,16 @@ public:
         return {empty()};
     }
 
+    template<typename P>
+    [[nodiscard]] FeaturesBase parentsOf(FeatureBase<P> feature) const
+    {
+        if (feature.isAnonymousNode())
+        {
+            return {view_.parentWaysOf(feature.xy())};
+        }
+        return {view_.parentsOf(feature.ptr())};
+    }
+
     /// @}
 
     template <typename Predicate>
@@ -261,12 +278,6 @@ protected:
     }
 
     FeatureIterator<T> query() const;
-
-    bool isEmpty() const
-    {
-        return FeatureUtils::isEmpty(view_);
-    }
-
 
     static View rootView(const char* golFile)
     {

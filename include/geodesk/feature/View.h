@@ -26,7 +26,11 @@ class GEODESK_API View
         bounds;                 // If used, USES_BOUNDS flag must be set 
                                 // If it contains a value other than Box::ofWorld(),
                                 // ACTIVE_BOUNDS must be set
-        const uint8_t* relatedFeature;  // If used, USES_BOUNDS flag must be clear 
+        struct
+        {
+            const uint8_t* relatedFeature;  // If used, USES_BOUNDS flag must be clear
+            int32_t relatedNodeX, relatedNodeY;
+        };
     };
 
     enum Flags
@@ -54,9 +58,7 @@ public:
         WORLD,
         WAY_NODES,
         MEMBERS,
-        PARENTS,
-        PARENT_WAYS,
-        PARENT_RELATIONS,
+        PARENTS
     };
 
     explicit View(FeatureStore* store) :
@@ -94,6 +96,16 @@ public:
         context_.relatedFeature = related.ptr();
     }
 
+    View(int view, int flags, FeatureTypes types, FeatureStore* store, Coordinate anonNode,
+        const MatcherHolder* matcher, const Filter* filter) :
+        view_(view), flags_(flags), types_(types), store_(store),
+        matcher_(matcher), filter_(filter)
+    {
+        context_.relatedFeature = nullptr;
+        context_.relatedNodeX = anonNode.x;
+        context_.relatedNodeY = anonNode.y;
+    }
+
 
     View(const View& other) :
         View(other.view_, other.flags_, other.types_, other.store_,
@@ -114,9 +126,12 @@ public:
     {
         //printf("Destroying view, store refcount before = %llu\n", store_->refcount());
         //fflush(stdout);
-        store_->release();
+
         matcher_->release();
         if (filter_) filter_->release();
+        store_->release();
+            // Store must be released *last*, since the default matcher
+            //  resides within it (cause of #20)
     }
 
     View& operator=(const View& other)
@@ -187,7 +202,7 @@ public:
         matcher_->addref();
         store_->addref();
         if(filter_) filter_->addref();
-        return { WAY_NODES, flags_, types_, store_, way, matcher_, filter_ };
+        return { WAY_NODES, flags_, types, store_, way, matcher_, filter_ };
     }
 
     // TODO: guard against empty relations
@@ -210,6 +225,87 @@ public:
         return { MEMBERS, flags_, types_, store_, rel, matcher_, filter_ };
     }
 
+    View parentWaysOf(Coordinate anonNode) const
+    {
+        if(view_ != WORLD)
+        {
+            if(view_ == EMPTY) return empty();
+            throw QueryException("Not implemented");
+        }
+        FeatureTypes types = types_ & FeatureTypes::WAYS;
+            // don't constrain to WAYNODE_FLAGGED, because that
+            // would only return ways that have at least one feature node
+        if(types == 0) return empty();
+        // TODO: transform bbox into filter
+        matcher_->addref();
+        store_->addref();
+        if(filter_) filter_->addref();
+        return { PARENTS, flags_, types,
+            store_, anonNode, matcher_, filter_ };
+    }
+
+    View parentsOf(FeaturePtr feature) const
+    {
+        if(view_ != WORLD)
+        {
+            if(view_ == EMPTY) return empty();
+            throw QueryException("Not implemented");
+        }
+
+        FeatureTypes parentTypes = 0;
+        if (feature.isNode())
+        {
+            // nodes can have both ways and relations as parents
+            if (feature.flags() & FeatureFlags::WAYNODE)
+            {
+                parentTypes = FeatureTypes::WAYS & FeatureTypes::WAYNODE_FLAGGED;
+            }
+        }
+        if (feature.isRelationMember())
+        {
+            parentTypes |= FeatureTypes::RELATIONS;
+        }
+        FeatureTypes types = types_ & parentTypes;
+        if(types == 0) return empty();
+
+        // TODO: transform bbox into filter
+        matcher_->addref();
+        store_->addref();
+        if(filter_) filter_->addref();
+        return { PARENTS, flags_, types, store_, feature, matcher_, filter_ };
+    }
+
+    static View parentWaysOf(FeatureStore* store, Coordinate anonNode, const char* query = nullptr)
+    {
+        const MatcherHolder* matcher;
+        int flags;
+        if(query)
+        {
+            matcher = store->getMatcher(query);
+            flags = USES_MATCHER;
+        }
+        else
+        {
+            matcher = store->getAllMatcher();
+            flags = 0;
+        }
+        store->addref();
+        // important! cannot be waynode flagged, because that would
+        // only return ways that have at least one feature node
+        // For parents of anonymous nodes, we must query *all* ways
+        return { PARENTS, flags, FeatureTypes::WAYS,
+            store, anonNode, matcher, nullptr };
+    }
+
+    static View parentsOf(FeatureStore* store, FeaturePtr feature, int types, const char* query = nullptr)
+    {
+        assert((types & ((FeatureTypes::WAYS & FeatureTypes::WAYNODE_FLAGGED) |
+            FeatureTypes::RELATIONS)) == types);
+            // accepted types must not be anything other than
+            // ways (only with feature nodes) and relations
+        return related(PARENTS, types, store, feature, query);
+    }
+
     uint32_t view() const noexcept { return view_; }
     FeatureStore* store() const noexcept { return store_; }
     FeatureTypes types() const noexcept { return types_; }
@@ -220,9 +316,15 @@ public:
         return Box(context_.bounds.minX, context_.bounds.minY, 
             context_.bounds.maxX, context_.bounds.maxY);
     }
+
     FeaturePtr relatedFeature() const noexcept
     {
         return context_.relatedFeature;
+    }
+
+    Coordinate relatedAnonymousNode() const noexcept
+    {
+        return Coordinate(context_.relatedNodeX, context_.relatedNodeY);
     }
 
     bool usesMatcher() const noexcept
@@ -388,10 +490,12 @@ public:
             related, matcher_, filter_);
     }
 
+    /*
     View parentRelationsOf(FeaturePtr related) const
     {
         return ofRelated(PARENT_RELATIONS, related);
     }
+    */
 
     View membersOfRelation(FeaturePtr related) const
     {

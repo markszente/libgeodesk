@@ -20,6 +20,7 @@ set(BUILD_SHARED_LIBS OFF)
 option(GEODESK_PYTHON "Build GeoDesk with Python support" OFF)
 option(GEODESK_PYTHON_WHEELS "Enable Support for Python Wheels" OFF)
 option(GEODESK_EXAMPLES "Build example applications" ON)
+option(GEODESK_MULTITHREADED "Allow multiple threads to use the same GOL" OFF)
 
 # Option to choose between static or shared library
 # Only set the option if BUILD_SHARED_LIBS is not already defined
@@ -54,12 +55,18 @@ file(GLOB_RECURSE SOURCE_FILES "src/*.cpp")
 
 # Create the library
 add_library(geodesk ${SOURCE_FILES})
+if(GEODESK_MULTITHREADED)
+    message(STATUS "GeoDesk: Multi-threaded query access")
+    target_compile_definitions(geodesk PUBLIC GEODESK_MULTITHREADED)
+else()
+    message(STATUS "GeoDesk: Single-threaded query access")
+endif()
 target_compile_features(geodesk INTERFACE cxx_std_20)
 set_target_properties(geodesk PROPERTIES CXX_VISIBILITY_PRESET hidden)
 set(INCLUDES include src ${boost_crc_SOURCE_DIR}/include)
 if(GEODESK_WITH_GEOS)
     message(STATUS "GeoDesk: Building with GEOS support.")
-    add_definitions(-DGEODESK_WITH_GEOS)
+    target_compile_definitions(geodesk PUBLIC GEODESK_WITH_GEOS)
     if(NOT DEFINED GEOS_INCLUDE_PATHS)
         message(FATAL_ERROR "GeoDesk: GEOS_INCLUDE_PATHS must be set to the location of GEOS.")
     endif()

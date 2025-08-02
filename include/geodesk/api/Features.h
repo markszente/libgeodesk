@@ -30,7 +30,7 @@ namespace geodesk {
 /// iterating over a Features object will result in the query being
 /// executed twice.
 ///
-/// Features objects are lightweight, thread-safe, and designed to be
+/// Features objects are lightweight, thread-safe (see note below), and designed to be
 /// passed by value. They can be safely shared across threads. Matchers,
 /// filters, and related resources (such as temporary indexes) use
 /// reference counting to ensure efficient and safe resource management.
@@ -103,10 +103,17 @@ namespace geodesk {
 /// from [GeoDesk for Java](https://docs.geodesk.com/java/libraries#closing-a-library),
 /// which requires GOLs to be closed explicitly).
 ///
-/// **Important:** After a GOL has been closed, any Feature objects obtained
+/// @warning
+/// After a GOL has been closed, any Feature objects obtained
 /// from it become invalid. Calling their methods results in undefined behavior.
 /// This restriction also applies to related types, such as Tags, Tag, TagValue
 /// and StringValue.
+///
+/// @note
+/// To allow multiple threads to share Features objects that use the same
+/// GOL, GeoDesk must be built with option `GEODESK_MULTITHREADED` enabled.
+/// Leaving this option disabled may improve the performance of single-threaded
+/// applications.
 ///
 class Features
 {
@@ -131,10 +138,14 @@ public:
     ///
     operator bool() const;
 
-    /// @brief Returns `true` if this collection is empty.
+    /// @brief Returns `true` if this collection contains no features.
     ///
     bool operator!() const;
 
+    /// @brief Returns `true` if this collection contains no features.
+    ///
+    bool isEmpty() const;
+    
     /// @brief Checks if the specified Feature exists in this collection.
     ///
     bool contains(const Feature& feature) const;

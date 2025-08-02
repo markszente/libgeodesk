@@ -24,9 +24,11 @@ public:
 	struct Header
 	{
 		uint32_t magic;
-		uint16_t versionLow;
-		uint16_t versionHigh;
+		uint32_t version;
 		uint64_t creationTimestamp;
+		uint32_t totalPageCount;
+		
+		/*
 		uint8_t  guid[16];
 		uint8_t  pageSize;
 		uint32_t reserved : 24;
@@ -34,24 +36,23 @@ public:
 		uint32_t propertiesPointer;
 		uint32_t indexPointer;
 
-		/**
-		 * The total number of pages in use (includes free blobs and metadata pages).
-		 */
+		/// The total number of pages in use (includes free blobs and metadata pages).
+		///
 		uint32_t totalPageCount;
 
-		/**
-		 * A bitfield indicating which spans of 16 slots in the Trunk Free-Table
-		 * have at least one slot that is non-zero.
-		 */
+		/// A bitfield indicating which spans of 16 slots in the Trunk Free-Table
+		/// have at least one slot that is non-zero.
+		///
 		uint32_t trunkFreeTableRanges;
 		uint32_t datasetVersion;
 		uint32_t reserved2;
 		uint8_t  subtypeData[64];
+		*/
 
 		/**
 		 * The Trunk Free-Table
 		 */
-		PageNum trunkFreeTable[512];
+		// PageNum trunkFreeTable[512];
 	};
 
 	//struct Header
