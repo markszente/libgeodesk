@@ -17,6 +17,12 @@ namespace Threads
         #ifdef _WIN32
         HANDLE hThread = reinterpret_cast<HANDLE>(thread.native_handle());
         TerminateThread(hThread, 0);
+        #elif defined(__ANDROID__)
+        // pthread_cancel is not available on Android
+        // The thread must terminate cooperatively
+        // This is a no-op on Android - threads should be designed to exit gracefully
+        // via cooperative cancellation mechanisms
+        (void)thread; // Suppress unused parameter warning
         #else
         pthread_t nativeThread = thread.native_handle();
         pthread_cancel(nativeThread);

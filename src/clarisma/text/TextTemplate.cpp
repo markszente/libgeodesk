@@ -17,6 +17,7 @@ TextTemplate::Ptr TextTemplate::compile(std::string_view text)
     {
         uint32_t ofs;
         uint32_t len;
+        Part(uint32_t o, uint32_t l) : ofs(o), len(l) {}
     };
     std::vector<Part> parts;
     uint32_t totalTextLen = 0;

@@ -50,7 +50,7 @@ FileTime::FileTime(const char* filename)
 #ifdef __APPLE__
 	created_ = DateTime(static_cast<int64_t>(file_stat.st_birthtime));
 #else
-	created_ = DateTime(file_stat.st_ctime);
+	created_ = DateTime(static_cast<int64_t>(file_stat.st_ctime));
 #endif
 }
 

@@ -13,7 +13,10 @@
 #include <clarisma/io/IOException.h>
 
 static_assert(sizeof(off_t) >= 8, "off_t must be 64-bit");
+#ifndef __ANDROID__
+// On Android 32-bit, ssize_t is legitimately 32-bit even with _FILE_OFFSET_BITS=64
 static_assert(sizeof(ssize_t) >= 8, "ssize_t must be 64-bit");
+#endif
 
 namespace clarisma
 {
