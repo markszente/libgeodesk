@@ -1,8 +1,10 @@
 // Copyright (c) 2024 Clarisma / GeoDesk contributors
 // SPDX-License-Identifier: LGPL-3.0-only
 
+#include <fstream>
 #include <iostream>
 #include <memory>
+#include <set>
 #include <string_view>
 #include <catch2/catch_test_macros.hpp>
 #include <geodesk/geodesk.h>
@@ -12,8 +14,8 @@ using namespace geodesk;
 struct GolFixture
 {
 	GolFixture() :
-		world(R"(c:\geodesk\tests\w.gol)"),
-		monaco(R"(c:\geodesk\tests\monaco.gol)")
+		world(R"(d:\geodesk\tests\world.gol)"),
+		monaco(R"(d:\geodesk\tests\monaco.gol)")
 	{
 	}
 
@@ -55,7 +57,7 @@ TEST_CASE_METHOD(GolFixture, "Features2")
 
 TEST_CASE_METHOD(GolFixture, "Features 3")
 {
-	Features france(R"(c:\geodesk\tests\fr-good.gol)");
+	Features france(R"(d:\geodesk\tests\france.gol)");
 	Feature paris = france("a[boundary=administrative][admin_level=8][name=Paris]").one();
 	Features museums = france("na[tourism=museum]");
 	Features subwayStops = france("n[railway=station][station=subway]");
@@ -66,6 +68,58 @@ TEST_CASE_METHOD(GolFixture, "Features 3")
 		{
 			std::cout << "- " << stop["name"] << std::endl;
 		}
+	}
+}
+
+TEST_CASE_METHOD(GolFixture, "String values")
+{
+	std::vector<std::string> l;
+
+	for (auto f : monaco)
+	{
+		for (auto tag : f.tags())
+		{
+			std::string s = f.toString() + ": " + static_cast<std::string>(tag.value());
+			l.push_back(s);
+		}
+	}
+
+	std::sort(l.begin(), l.end());
+
+	// Write to file (UTF-8)
+	std::ofstream out("d:\\geodesk\\tests\\monaco-cpp.txt",
+					  std::ios::out | std::ios::trunc);
+	out.imbue(std::locale::classic());
+	for (const std::string& s : l)
+	{
+		out << s << "\n";
+	}
+}
+
+
+TEST_CASE_METHOD(GolFixture, "Int values")
+{
+	std::vector<std::string> l;
+
+	for (auto f : monaco)
+	{
+		for (auto tag : f.tags())
+		{
+			int64_t v = tag.value();
+			std::string s = f.toString() + ": " + std::to_string(v);
+			l.push_back(s);
+		}
+	}
+
+	std::sort(l.begin(), l.end());
+
+	// Write to file (UTF-8)
+	std::ofstream out("d:\\geodesk\\tests\\monaco-ints-cpp.txt",
+					  std::ios::out | std::ios::trunc);
+	out.imbue(std::locale::classic());
+	for (const std::string& s : l)
+	{
+		out << s << "\n";
 	}
 }
 
@@ -142,10 +196,38 @@ TEST_CASE_METHOD(GolFixture, "Iterate tags of anonymous nodes")
 
 TEST_CASE("Issue 21")
 {
-	Features world("c:\\geodesk\\tests\\w.gol");
+	Features world("d:\\geodesk\\tests\\world.gol");
 	Box tileBounds = Box::ofWSEN(-10, -10, 10, 10);
 	Features tile = world(tileBounds);
 	Features features = tile("w");
+}
+
+TEST_CASE("WayNodes")
+{
+	Features features("d:\\geodesk\\tests\\liguria.gol");
+	uint64_t count = 0;
+	for (auto street : features("w[highway]"))
+	{
+		for(auto node : street.nodes("n"))
+		{
+			std::cout << street << ": " << node << '\n';
+			count++;
+		}
+		if (count == 10) break;
+	}
+	std::cout << count << " waynodes\n";
+}
+
+
+TEST_CASE_METHOD(GolFixture, "role() of non-members (Issue 24)")
+{
+	for (Way way : monaco.ways())
+	{
+		if (way.role()) // <-- SEGFAULT
+		{
+			std::cout << way << " as " << way.role() << std::endl;
+		}
+	}
 }
 
 // TODO: Test if parent relation iterator respect types

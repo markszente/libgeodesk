@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
 #include <geodesk/geom/polygon/Polygonizer.h>
-#include "Ring.h"
+#include <geodesk/geom/polygon/Ring.h>
 #include "RingBuilder.h"
 #include "RingAssigner.h"
 #include "RingMerger.h"
@@ -61,7 +61,6 @@ void Polygonizer::createRings(FeatureStore* store, RelationPtr relation)
     {
         WayPtr way(iter.next());
         if (way.isNull()) break;
-        if (way.isPlaceholder()) continue;
 
         /*
         LOG("Creating segment for way/%ld", way.id());
@@ -163,7 +162,7 @@ GEOSGeometry* Polygonizer::createPolygonal(GEOSContextHandle_t context)
 {
     if (outerRings_ == nullptr)
     {
-        return GEOSGeom_createEmptyPolygon();
+        return GEOSGeom_createEmptyPolygon_r(context);
     }
 
     int ringCount = 0;

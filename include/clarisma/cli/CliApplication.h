@@ -19,7 +19,9 @@ public:
 	ConsoleWriter& out() { return out_; }
 	static CliApplication* get() { return theApp_; }
 
-	void fail(std::string msg);
+	void fail(std::string_view msg);
+	static bool shutdown(const char* msg);
+	static void abort(const char* msg);
 
 protected:
 	Console console_;

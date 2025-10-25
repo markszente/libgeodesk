@@ -6,6 +6,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <geodesk/geodesk.h>
 
+// #define GEODESK_CONCUR_TEST
+#ifdef GEODESK_CONCUR_TEST
+
 using namespace geodesk;
 
 // Structure to hold test information
@@ -39,7 +42,9 @@ struct test_name##_registrar                                     \
 } test_name##_registrar_instance;                                \
 int64_t test_name##_impl()
 
-static Features world(R"(c:\geodesk\tests\monaco.gol)");
+// static Features world(R"(c:\geodesk\tests\mcxx.gol)");
+static Features world(R"(d:\geodesk\tests\monaco.gol)");
+
 
 Feature findLargestCountry()
 {
@@ -321,8 +326,9 @@ GEODESK_TEST(tags_str_len)
     {
         for(auto tag: f.tags())
         {
-            std::string strValue = tag.value();
-            totalLen += static_cast<int64_t>(strValue.size());
+            // std::string strValue = tag.value();
+            // totalLen += static_cast<int64_t>(strValue.size());
+            totalLen += tag.value().charCount();
         }
     }
     return totalLen;
@@ -335,7 +341,7 @@ GEODESK_TEST(tags_int_sum)
     {
         for(auto tag: f.tags())
         {
-            sum += static_cast<int>(tag.value());
+            sum += static_cast<int64_t>(tag.value());
         }
     }
     return sum;
@@ -423,3 +429,5 @@ TEST_CASE("concur")
         std::cout << test.name << "=" << test.function() << std::endl;
     }
 }
+
+#endif

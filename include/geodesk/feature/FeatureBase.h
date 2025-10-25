@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <clarisma/util/streamable.h> // for << operator support
 #include <clarisma/util/TaggedPtr.h>
 #include <geodesk/feature/FeatureStore.h>
 #include <geodesk/feature/FeatureUtils.h>
@@ -29,8 +30,10 @@ class Nodes;
 template <typename T>
 class FeatureIterator;
 
+using clarisma::operator<<;
+
 ///
-/// Do not show this class.
+/// Do not show this class (We use api/Feature.h for documentation)
 ///
 template<typename T>
 class FeatureBase
@@ -151,8 +154,11 @@ public:
     /// @return the Feature's role (or an empty string)
     [[nodiscard]] StringValue role() const noexcept
     {
-        if(isAnonymousNode()) return {};
-        return feature_.role;
+        if(isAnonymousNode()) [[unlikely]]
+        {
+            return {};
+        }
+        return { feature_.role ? feature_.role : clarisma::ShortVarString::empty() };
     }
 
     bool operator==(const Feature& other) const noexcept
@@ -201,6 +207,14 @@ public:
     char* format(char* buf) const noexcept
     {
         return FeatureUtils::format(buf, typeName(), id());
+    }
+
+    template<typename Stream>
+    void format(Stream& out) const
+    {
+        char buf[32];
+        const char *p = format(buf);
+        out.write(buf, p - buf);
     }
 
     [[nodiscard]] std::string toString() const
@@ -428,7 +442,7 @@ private:
 
     void setRole(StringValue role) noexcept
     {
-        feature_.role = role;
+        feature_.role = static_cast<const clarisma::ShortVarString*>(role);
     }
 
     int typeCode() const { return store_.flags() >> 1; }
@@ -500,7 +514,7 @@ private:
         struct
         {
             FeaturePtr ptr;
-            StringValue role;
+            const clarisma::ShortVarString* role;
         }
         feature_;
         struct  // NOLINT
@@ -520,6 +534,7 @@ private:
     friend class FeatureIteratorBase;
 };
 
+/*
 template<typename Stream,typename T>
 Stream& operator<<(Stream& out, const FeatureBase<T>& f)
 {
@@ -528,6 +543,7 @@ Stream& operator<<(Stream& out, const FeatureBase<T>& f)
     out.write(buf, p - buf);
     return out;
 }
+*/
 
 using Feature = FeatureBase<FeaturePtr>;
 using Node = FeatureBase<NodePtr>;
